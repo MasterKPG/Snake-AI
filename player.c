@@ -8,11 +8,12 @@
 #include "snake_dec.h"
 
 // student name goes here
-char * student="Random"; 
+char * student="Mohammad Amara"; 
 
 // prototypes of the local/private functions
 static void printAction(action);
 static void printBoolean(bool);
+static void actionValid(action, char **, int, int, bool *);
 
 /*
   snake function called from the main program
@@ -28,6 +29,10 @@ action snake(
   action a; // action to choose and return
   
   bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
+
+  //coordinates of the snake's head
+  int x = s->x;
+  int y = s->y;
   
   do {
     a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
@@ -38,32 +43,7 @@ action snake(
       printf("\n");
     }
 
-    switch(a) { // check whether the randomly selected action is valid, i.e., if its preconditions are satisfied 
-    case NORTH: // going toward this direction does not put snake's head into
-      if(map[s->y-1][s->x]!=WALL // a wall
-	      && map[s->y-1][s->x]!=SNAKE_BODY // snake's body
-	      && map[s->y-1][s->x]!=SNAKE_TAIL) // snake's tail
-	      ok=true; // this direction is safe, hence valid!
-      break;
-    case EAST: // going toward this direction does not put snake's head into
-      if(map[s->y][s->x+1]!=WALL // a wall
-	      && map[s->y][s->x+1]!=SNAKE_BODY // snake's body
-	      && map[s->y][s->x+1]!=SNAKE_TAIL) // snake's tail
-	      ok=true; // this direction is safe, hence valid!
-      break;
-    case SOUTH: // going toward this direction does not put snake's head into
-      if(map[s->y+1][s->x]!=WALL // a wall
-	      && map[s->y+1][s->x]!=SNAKE_BODY // snake's body
-	      && map[s->y+1][s->x]!=SNAKE_TAIL) // snake's tail
-	    ok=true; // this direction is safe, hence valid!
-      break;
-    case WEST: // going toward this direction does not put snake's head into
-      if(map[s->y][s->x-1]!=WALL // a wall
-	      && map[s->y][s->x-1]!=SNAKE_BODY // snake's body
-	      && map[s->y][s->x-1]!=SNAKE_TAIL) // snake's tail
-	      ok=true; // this direction is safe, hence valid!
-      break;
-    }
+    actionValid(a, map, x, y, &ok);
 
     if(DEBUG) { // print whether the randomly selected action is valid, only in DEBUG mode
       printf("Is this candidate action valid? ");
@@ -113,3 +93,35 @@ static void printBoolean(bool b) {
   }
 }
 
+/*
+  actionValid funtion:
+  This function checks if the action is valid or not, then changes the ok variable accordingly.
+*/
+static void actionValid(action a, char ** map, int x, int y, bool *ok){
+  switch(a) { // check whether the randomly selected action is valid, i.e., if its preconditions are satisfied 
+  case NORTH: // going toward this direction does not put snake's head into
+    if(map[y-1][x]!=WALL // a wall
+	    && map[y-1][x]!=SNAKE_BODY // snake's body
+	    && map[y-1][x]!=SNAKE_TAIL) // snake's tail
+	    ok=true; // this direction is safe, hence valid!
+    break;
+  case EAST: // going toward this direction does not put snake's head into
+    if(map[y][x+1]!=WALL // a wall
+	    && map[y][x+1]!=SNAKE_BODY // snake's body
+	    && map[y][x+1]!=SNAKE_TAIL) // snake's tail
+	    ok=true; // this direction is safe, hence valid!
+    break;
+  case SOUTH: // going toward this direction does not put snake's head into
+    if(map[y+1][x]!=WALL // a wall
+	    && map[y+1][x]!=SNAKE_BODY // snake's body
+	    && map[y+1][x]!=SNAKE_TAIL) // snake's tail
+	  ok=true; // this direction is safe, hence valid!
+    break;
+  case WEST: // going toward this direction does not put snake's head into
+    if(map[y][x-1]!=WALL // a wall
+	    && map[y][x-1]!=SNAKE_BODY // snake's body
+	    && map[y][x-1]!=SNAKE_TAIL) // snake's tail
+	    ok=true; // this direction is safe, hence valid!
+    break;
+  }
+}
