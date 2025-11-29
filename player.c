@@ -42,6 +42,10 @@ action snake(
   //Use the function snakeTail to assign the coordinates of the tail to tx and ty
   snakeTail(s, &tx, &ty);
 
+  if (DEBUG){//Print the coordinates of the tail
+    printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tx, ty);
+  }
+
   //Coordinates of the Bonus
   int bx;
   int by;
