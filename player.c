@@ -30,10 +30,26 @@ action snake(
   
   bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
 
-  //coordinates of the snake's head
+  //Coordinates of the snake's head
   int x = s->x;
   int y = s->y;
+
+  //Bonus coordinates initialized to -1
+  int bx = -1;
+  int by = -1;
+
+  //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
+  bool found = false;
+  for (int row = 1; row < mapysize - 1 && !found; row++)
+    for (int col = 1; col < mapxsize - 1 && !found; col++)
+      if (map[row][col] == BONUS){ bx = col; by = row; found = true; }
   
+  if (DEBUG){
+    printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bx, by);
+    printf("The bonus has been found: ");
+    printBoolean(found);
+    printf("\n");
+  }
   do {
     a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
 
@@ -124,4 +140,5 @@ static bool actionValid(action a, char ** map, int x, int y){
 	    return true; // this direction is safe, hence valid!
     break;
   }
+  return false;
 }
