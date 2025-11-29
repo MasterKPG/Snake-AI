@@ -14,6 +14,7 @@ char * student="Mohammad Amara";
 static void printAction(action);
 static void printBoolean(bool);
 static bool actionValid(action, char **, int, int);
+static void snakeTail(snake_list, int *, int *);
 
 /*
   snake function called from the main program
@@ -144,4 +145,24 @@ static bool actionValid(action a, char ** map, int x, int y){
     break;
   }
   return false;
+}
+
+/*
+  snakeTail funtion:
+  This function goes through the snake linked list to get the coordinates of the tail
+  then changes the tx and ty variables accordingly.
+*/
+static void snakeTail(snake_list s, int *ptx, int *pty){
+  if (s->c == SNAKE_HEAD && s->next == NULL ){// if the snake's length is 1, meaning it's the start of the game
+    //Assign -1 to the coordinates of the tail
+    *ptx = -1;
+    *pty = -1;
+    return;
+  } else if (s->c == SNAKE_TAIL){//We found the tail, we assign the coordinates to the variables
+    *ptx = s->x;
+    *pty = s->y;
+    return;
+  } else {//We need to go deeper since we're still at the body or the head of the snake
+    snakeTail(s->next, ptx, pty);
+  }
 }
