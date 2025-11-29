@@ -35,6 +35,10 @@ action snake(
   int x = s->x;
   int y = s->y;
 
+  if (DEBUG){//Print the coordinates of the of the head
+    printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", x, y);
+  }
+
   //Coordinates of the snake's tail
   int tx;
   int ty;
