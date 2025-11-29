@@ -161,9 +161,10 @@ static bool actionValid(action a, char ** map, int x, int y){
 */
 static void snakeTail(snake_list s, int *ptx, int *pty){
   if (s->c == SNAKE_HEAD && s->next == NULL ){// if the snake's length is 1, meaning it's the start of the game
-    //Assign -1 to the coordinates of the tail
-    *ptx = -1;
-    *pty = -1;
+    //Assign the head's coordinates to the coordinates of the tail 
+    //since they're technically overlapping and they're at the same node of the map
+    *ptx = s->x;
+    *pty = s->y;
     return;
   } else if (s->c == SNAKE_TAIL){//We found the tail, we assign the coordinates to the variables
     *ptx = s->x;
