@@ -44,12 +44,15 @@ action snake(
     for (int col = 1; col < mapxsize - 1 && !found; col++)
       if (map[row][col] == BONUS){ bx = col; by = row; found = true; }
   
-  if (DEBUG){
-    printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bx, by);
+  if (DEBUG){ //Print the coordinates if the bonus has been found
+    if (found){
+      printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bx, by);
+    }
     printf("The bonus has been found: ");
     printBoolean(found);
     printf("\n");
   }
+
   do {
     a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
 
