@@ -35,9 +35,16 @@ action snake(
   int x = s->x;
   int y = s->y;
 
-  //Bonus coordinates initialized to -1
-  int bx = -1;
-  int by = -1;
+  //Coordinates of the snake's tail
+  int tx;
+  int ty;
+
+  //Use the function snakeTail to assign the coordinates of the tail to tx and ty
+  snakeTail(s, &tx, &ty);
+
+  //Coordinates of the Bonus
+  int bx;
+  int by;
 
   //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
   bool found = false;
