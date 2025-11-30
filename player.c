@@ -15,6 +15,7 @@ static void printAction(action);
 static void printBoolean(bool);
 static bool actionValid(action, char **, int, int);
 static void snakeTail(snake_list, int *, int *);
+static bool isSnakeBody(snake_list, int, int);
 
 /*
   snake function called from the main program
@@ -188,7 +189,7 @@ static void snakeTail(snake_list s, int *ptx, int *pty){
   This function checks if the coordinates passed in the arguments are occupied by the snake's body 
   (including head and tail).
 */
-bool isSnakeBody(snake_list s, int x, int y){
+static bool isSnakeBody(snake_list s, int x, int y){
   snake_list current = s;
   while(current != NULL){
     if (current->x == x && current->y == y){
