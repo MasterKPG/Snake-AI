@@ -18,6 +18,27 @@ static void snakeTail(snake_list, int *, int *);
 static bool isSnakeBody(snake_list, int, int);
 
 /*
+  Type definitions
+*/
+
+/*
+  Position struct, this has the coordinates of a node in the map
+*/
+typedef struct {//Position in the map (this will be used to define graph nodes)
+    int x;
+    int y;
+} Position;
+
+/*
+  Graph struct, this will be used to define a graph in the map based on the free nodes (PATH/BONUS)
+*/
+typedef struct {
+    Position *nodes;    //Array of free nodes (for example node[O] = {1,2} means the node 0 is the pixel at x=1 and y=2)
+    int node_count;     //Number of free nodes/pixels in the map/graph
+    int **adjacency;    //Adjacency matrix
+} Graph;
+
+/*
   snake function called from the main program
   This function randomly selects a valid move for Snake based on its current position on the game map
 */
