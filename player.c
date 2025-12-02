@@ -252,15 +252,37 @@ static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
   }
 
   //Allocating adjacency matrix
-  g->adjacency = (int**)malloc(sizeof(int *)*g->node_count);
-  if (g->adjacency == NULL){//
+  g->adjacency = (int**)malloc(sizeof(int *)*g->node_count);//Matrix with node_count rows, each row is a pointer to a pointer to an array of integers
+  if (g->adjacency == NULL){//The allocation has failed
     free(g->nodes);
     free(g);
     return NULL;
   }
 
+  for (int i = 0; i < g->node_count; i++){
+    g->adjacency[i] = (int*)calloc(g->node_count,sizeof(int));//Matrix with node_count columns, with int elements (1 or 0) initialized with zeros
+    if (g->adjacency[i] == NULL){
+      for (int j = 0; j < i; j++){//The allocation has failed
+        free(g->adjacency[j]);
+      }
+      free(g->adjacency);
+      free(g->nodes);
+      free(g);
+    }
+  }
   
-
+  //Fill the adjacency matrix 1s where the pixels are adjacent (the matrix is symmetrical so we can optimize later and do the calculations 1/2 times)
+  for (int i = 0; i < g->node_count; i++){
+    for(int j = 0; j < g->node_count; j++){//We go through the matrix and calculate the distance between node i and j coordinates which can tell us if they're adjacent or not (1 = adjacent)
+      int dx = abs(g->nodes[i].x - g->nodes[j].x);//Distance between nodes on the x axis 
+      int dy = abs(g->nodes[i].y - g->nodes[j].y);//Distance between nodes on the y axis
+      //The nodes are adjacent if the distance between them is 1 on one of the axis so either dx=1 or dy=1 and the distance to the other is 0
+      if ( (dx == 1 && dy == 0) || (dx == 0 && dy == 1) ){
+        g->adjacency[i][j] == 1; //The nodes are adjacent 
+      }
+    }
+  }
+  return g; //The graph is ready, with the nodes array and the adjacency matrix full
 }
 
 /*
