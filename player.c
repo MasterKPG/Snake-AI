@@ -221,7 +221,9 @@ static bool isSnakeBody(snake_list s, int x, int y){
 
 /*
   createGraph function:
-  This function takes in the 
+  This function takes in the map and the snake list, makes a graph based on the free pixels (paths not occupied by the snake body)
+  making the nodes array which contains the nodes with their indices and coordinates and then makes the adjacency matrix of the graph
+  Returns the graph variable containing the nodes array, node_count and the adjacency matrix
 */
 static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
   graph *g = (graph*)malloc(sizeof(graph));
