@@ -10,17 +10,6 @@
 // student name goes here
 char * student="Mohammad Amara"; 
 
-// prototypes of the local/private functions
-static void printAction(action);
-static void printBoolean(bool);
-static bool actionValid(action, char **, int, int);
-static void snakeTail(snake_list, int *, int *);
-static bool isSnakeBody(snake_list, int, int);
-
-/*
-  Type definitions
-*/
-
 /*
   Position struct, this has the coordinates of a node in the map
 */
@@ -36,7 +25,16 @@ typedef struct {
     Position *nodes;    //Array of free nodes (for example node[O] = {1,2} means the node 0 is the pixel at x=1 and y=2)
     int node_count;     //Number of free nodes/pixels in the map/graph
     int **adjacency;    //Adjacency matrix
-} Graph;
+} graph;
+
+// prototypes of the local/private functions
+static void printAction(action);
+static void printBoolean(bool);
+static bool actionValid(action, char **, int, int);
+static void snakeTail(snake_list, int *, int *);
+static bool isSnakeBody(snake_list, int, int);
+static graph* createGraph(char **, snake_list, int, int);
+static int countFreePixels(char **, snake_list, int, int);
 
 /*
   snake function called from the main program
@@ -54,11 +52,11 @@ action snake(
   bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
 
   //Coordinates of the snake's head
-  int x = s->x;
-  int y = s->y;
+  int hx = s->x;
+  int hy = s->y;
 
   if (DEBUG){//Print the coordinates of the of the head
-    printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", x, y);
+    printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", hx, hy);
   }
 
   //Coordinates of the snake's tail
@@ -100,7 +98,7 @@ action snake(
       printf("\n");
     }
 
-    ok = actionValid(a, map, x, y);
+    ok = actionValid(a, map, hx, hy);
 
     if(DEBUG) { // print whether the randomly selected action is valid, only in DEBUG mode
       printf("Is this candidate action valid? ");
@@ -219,4 +217,63 @@ static bool isSnakeBody(snake_list s, int x, int y){
     current = current->next;
   }
   return false;
+}
+
+/*
+  createGraph function:
+  This function takes in the 
+*/
+static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
+  graph *g = (graph*)malloc(sizeof(graph));
+  if (g == NULL) return NULL; //Failed memory allocation
+
+  //Counting the free pixels
+  g->node_count = countFreePixels(map, s, mapxsize, mapysize);
+
+  //Allocating the nodes array
+  g->nodes = (Position*)malloc(sizeof(Position)*g->node_count); 
+  if (g->nodes == NULL){//The allocation has failed
+    free(g);
+    return NULL;
+  }
+
+  //Filling the nodes array with the free pixels that can be used
+  int i = 0; //Index for counting graph nodes
+  for (int y = 1; y < mapysize - 1; y++){
+    for (int x = 1; x < mapxsize -1; x++){
+      if (map[y][x] != WALL && !isSnakeBody(s, x, y)){
+        //The node i contains it's position in the map given by the coordinates x and y
+        //We increment the index i to go to the next pixel/node
+        g->nodes[i].x = x;
+        g->nodes[i].y = y;
+        i++;
+      }
+    }
+  }
+
+  //Allocating adjacency matrix
+  g->adjacency = (int**)malloc(sizeof(int *)*g->node_count);
+  if (g->adjacency == NULL){//
+    free(g->nodes);
+    free(g);
+    return NULL;
+  }
+
+  
+
+}
+
+/*
+  countFreeCells function:
+  This function counts the free cells in the map excluding the entire snake from head to tail.
+*/
+static int countFreePixels(char **map, snake_list s, int mapxsize, int mapysize){
+  int count; //Local variable to count the free cells
+  for (int i = 0; i < mapxsize; i++){
+    for (int j = 0; j < mapysize; j++){
+      //For a pixel to be free it has to be inside the map and not occupied by the snake's body
+      if (map[j][i] != WALL && !isSnakeBody(s,i,j)) count++;
+    }
+  }
+  return count;
 }
