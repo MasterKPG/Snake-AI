@@ -54,37 +54,40 @@ action snake(
   bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
 
   //Coordinates of the snake's head
-  int hx = s->x;
-  int hy = s->y;
+  Position headPos;
+  headPos.x = s->x;
+  headPos.y = s->y;
 
   if (DEBUG){//Print the coordinates of the of the head
-    printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", hx, hy);
+    printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", headPos.x, headPos.y);
   }
 
   //Coordinates of the snake's tail
-  int tx;
-  int ty;
+  Position tailPos;
 
-  //Use the function snakeTail to assign the coordinates of the tail to tx and ty
-  snakeTail(s, &tx, &ty);
+  //Use the function snakeTail to assign the coordinates of the tail to tailPos.x and tailPos.y
+  snakeTail(s, &(tailPos.x), &(tailPos.y));
 
   if (DEBUG){//Print the coordinates of the tail
-    printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tx, ty);
+    printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tailPos.x, tailPos.y);
   }
 
   //Coordinates of the Bonus
-  int bx;
-  int by;
+  Position bonusPos;
 
   //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
   bool found = false;
   for (int row = 1; row < mapysize - 1 && !found; row++)
     for (int col = 1; col < mapxsize - 1 && !found; col++)
-      if (map[row][col] == BONUS){ bx = col; by = row; found = true; }
+      if (map[row][col] == BONUS){
+        bonusPos.x = col;
+        bonusPos.y = row;
+        found = true;
+      }
   
   if (DEBUG){ //Print the coordinates if the bonus has been found
     if (found){
-      printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bx, by);
+      printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bonusPos.x, bonusPos.y);
     }
     printf("The bonus has been found: ");
     printBoolean(found);
@@ -100,7 +103,7 @@ action snake(
       printf("\n");
     }
 
-    ok = actionValid(a, map, hx, hy);
+    ok = actionValid(a, map, headPos.x, headPos.y);
 
     if(DEBUG) { // print whether the randomly selected action is valid, only in DEBUG mode
       printf("Is this candidate action valid? ");
