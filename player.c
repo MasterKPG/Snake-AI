@@ -35,6 +35,8 @@ static void snakeTail(snake_list, int *, int *);
 static bool isSnakeBody(snake_list, int, int);
 static graph* createGraph(char **, snake_list, int, int);
 static int countFreePixels(char **, snake_list, int, int);
+static int findNode(graph *, int, int);
+static int adjacentPos(int, int, Position *);
 
 /*
   snake function called from the main program
@@ -300,4 +302,44 @@ static int countFreePixels(char **map, snake_list s, int mapxsize, int mapysize)
     }
   }
   return count;
+}
+
+/*
+  findNode function:
+  This function goes through the nodes array and returns the index of the node in the coordinates x and y
+*/
+static int findNode(graph *g, int x, int y){
+  for (int i = 0; i < g->node_count; i++){//Go through the nodes until the last one, look for a match in coordinates 
+    if (g->nodes[i].x == x && g->nodes[i].y == y) return i;//If the coordinates match, return the index
+  }
+  return -1;//Else return -1
+}
+
+/*
+  adjacentPos function:
+  This function takes in coordinates of a cell, and returns the count of possible adjacent positions,
+  aswell as returning their coordinates in the adjacent array passed in the arguments.
+*/
+static int adjacentPos(int x, int y, Position *adjacent){
+  int count = 0;
+
+  //North of the cell
+  adjacent[count].x = x;
+  adjacent[count].y = y - 1;
+  count++;
+
+  //South of the cell
+  adjacent[count].x = x;
+  adjacent[count].y = y + 1;
+  count++;
+
+  //East of the cell
+  adjacent[count].x = x + 1;
+  adjacent[count].y = y;
+  count++;
+
+  //West of the cell
+  adjacent[count].x = x - 1;
+  adjacent[count].y = y;
+  count++;
 }
