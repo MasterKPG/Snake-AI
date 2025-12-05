@@ -285,7 +285,7 @@ static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
       int dy = abs(g->nodes[i].y - g->nodes[j].y);//Distance between nodes on the y axis
       //The nodes are adjacent if the distance between them is 1 on one of the axis so either dx=1 or dy=1 and the distance to the other is 0
       if ( (dx == 1 && dy == 0) || (dx == 0 && dy == 1) ){
-        g->adjacency[i][j] == 1; //The nodes are adjacent 
+        g->adjacency[i][j] = 1; //The nodes are adjacent 
       }
     }
   }
@@ -345,4 +345,6 @@ static int adjacentPos(int x, int y, Position *adjacent){
   adjacent[count].x = x - 1;
   adjacent[count].y = y;
   count++;
+
+  return count;
 }
