@@ -27,6 +27,16 @@ typedef struct {
     int **adjacency;    //Adjacency matrix
 } graph;
 
+/*
+  Path structure for backtracking
+*/
+typedef struct {
+    int *path;           /* Array of node indices */
+    bool *visited;       /* Visited array */
+    int path_length;     /* Current path length */
+    bool bonus_visited;  /* Flag to track if bonus was visited */
+} PathState;
+
 // prototypes of the local/private functions
 static void printAction(action);
 static void printBoolean(bool);
