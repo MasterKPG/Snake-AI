@@ -31,12 +31,13 @@ typedef struct {
 static void printAction(action);
 static void printBoolean(bool);
 static bool actionValid(action, char **, int, int);
-static void snakeTail(snake_list, int *, int *);
 static bool isSnakeBody(snake_list, int, int);
 static graph* createGraph(char **, snake_list, int, int);
 static int countFreePixels(char **, snake_list, int, int);
 static int findNode(graph *, int, int);
 static int adjacentPos(int, int, Position *);
+Position getHeadPos(s);
+Position getHeadPos(s);
 
 /*
   snake function called from the main program
@@ -55,8 +56,7 @@ action snake(
 
   //Coordinates of the snake's head
   Position headPos;
-  headPos.x = s->x;
-  headPos.y = s->y;
+  headPos = getHeadPos(s);
 
   if (DEBUG){//Print the coordinates of the of the head
     printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", headPos.x, headPos.y);
@@ -65,8 +65,8 @@ action snake(
   //Coordinates of the snake's tail
   Position tailPos;
 
-  //Use the function snakeTail to assign the coordinates of the tail to tailPos.x and tailPos.y
-  snakeTail(s, &(tailPos.x), &(tailPos.y));
+  //Use the function getTailPos to assign the coordinates of the tail to tailPos.x and tailPos.y
+  tailPos = getTailPos(s);
 
   if (DEBUG){//Print the coordinates of the tail
     printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tailPos.x, tailPos.y);
@@ -185,27 +185,6 @@ static bool actionValid(action a, char ** map, int x, int y){
     break;
   }
   return false;
-}
-
-/*
-  snakeTail funtion:
-  This function goes through the snake linked list to get the coordinates of the tail
-  then changes the tx and ty variables accordingly.
-*/
-static void snakeTail(snake_list s, int *ptx, int *pty){
-  if (s->c == SNAKE_HEAD && s->next == NULL ){// if the snake's length is 1, meaning it's the start of the game
-    //Assign the head's coordinates to the coordinates of the tail 
-    //since they're technically overlapping and they're at the same node of the map
-    *ptx = s->x;
-    *pty = s->y;
-    return;
-  } else if (s->c == SNAKE_TAIL){//We found the tail, we assign the coordinates to the variables
-    *ptx = s->x;
-    *pty = s->y;
-    return;
-  } else {//We need to go deeper since we're still at the body or the head of the snake
-    snakeTail(s->next, ptx, pty);
-  }
 }
 
 /*
@@ -347,4 +326,31 @@ static int adjacentPos(int x, int y, Position *adjacent){
   count++;
 
   return count;
+}
+
+/*
+  getHeadPos function:
+  This function takes in the snake list and returns the position of the head in the Position type variable.
+*/
+Position getHeadPos(snake_list s){
+  Position HeadPos;
+  HeadPos.x = s->x;
+  HeadPos.y = s->y;
+  return HeadPos;
+}
+
+/*
+  getHeadPos function:
+  This function takes in the snake list and returns the position of the tail in a Position type variable.
+*/
+Position getTailPos(snake_list s){
+  Position TailPos;
+  snake_list current = s;
+
+  while(current->next != NULL){
+    current = current->next;
+  }
+
+  TailPos.x = current->x;
+  TailPos.y = current->y;
 }
