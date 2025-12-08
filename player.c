@@ -54,15 +54,16 @@ action snake(
   
   bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
 
-  //Coordinates of the snake's head
+  //Coordinates of the snake's head---------------------------------------------------------------------------
   Position headPos;
   headPos = getHeadPos(s);
 
   if (DEBUG){//Print the coordinates of the of the head
     printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", headPos.x, headPos.y);
   }
+  //----------------------------------------------------------------------------------------------------------
 
-  //Coordinates of the snake's tail
+  //Coordinates of the snake's tail---------------------------------------------------------------------------
   Position tailPos;
 
   //Use the function getTailPos to assign the coordinates of the tail to tailPos.x and tailPos.y
@@ -71,8 +72,9 @@ action snake(
   if (DEBUG){//Print the coordinates of the tail
     printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tailPos.x, tailPos.y);
   }
+  //----------------------------------------------------------------------------------------------------------
 
-  //Coordinates of the Bonus
+  //Coordinates of the Bonus----------------------------------------------------------------------------------
   Position bonusPos;
 
   //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
@@ -93,7 +95,8 @@ action snake(
     printBoolean(found);
     printf("\n");
   }
-
+  //-----------------------------------------------------------------------------------------------------------
+  
   do {
     a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
 
