@@ -53,7 +53,7 @@ static Position getTailPos(snake_list);
 //static bool findHamiltonianPath(graph *, int *, int, int *, int, int **, int *);
 //static action getDirection(Position, Position);
 //static void freeGraph(graph *);
-static action followTailStrategy(char **, int, int, Position, Position, Position, bool);
+static action followTailStrategy(char **, int, int, Position, Position, Position, snake_list);
 static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
 
@@ -91,26 +91,20 @@ action snake(
   Position bonusPos;
 
   //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
-  bool bonus_found = false;
-  for (int row = 1; row < mapysize - 1 && !bonus_found; row++)
-    for (int col = 1; col < mapxsize - 1 && !bonus_found; col++)
+  for (int row = 1; row < mapysize - 1; row++)
+    for (int col = 1; col < mapxsize - 1; col++)
       if (map[row][col] == BONUS){
         bonusPos.x = col;
         bonusPos.y = row;
-        bonus_found = true;
+        break; //Bonus found, break the loop
       }
   
-  if (DEBUG){ //Print the coordinates if the bonus has been found
-    if (bonus_found){
-      printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bonusPos.x, bonusPos.y);
-    }
-    printf("The bonus has been found: ");
-    printBoolean(bonus_found);
-    printf("\n");
+  if (DEBUG){ //Print the coordinates of the bonus
+    printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bonusPos.x, bonusPos.y);
   }
   //-----------------------------------------------------------------------------------------------------------
 
-  a = followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, bonus_found);
+  a = followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
 
   if (DEBUG){
     printf("Follow tail strategy, moving: ");
@@ -585,7 +579,7 @@ static int countValidMoves(char **map, int x, int y){
   This function chooses the best move possible, one that will not trap us by following the tail
   and help us take the bonus if it's close to the path to the tail.
 */
-static action followTailStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, bool bonus_found){
+static action followTailStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, snake_list s){
   
   action moves[4] = {NORTH, EAST, SOUTH, WEST}; //Array to iterate through the moves without naming them everytime
   //We store the coordinates changes in these arrays, they represent the how the position changes when moving in each direction,
@@ -593,27 +587,36 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
   int dx[4] = {0, 1, 0, -1};
   int dy[4] = {-1, 0, 1, 0};
 
+  int snakeLength = getSnakeLength(s);//Get snake length
+
+  //Calculate dynamic tolerance (ignore getting trapped) based on snake length and map size
+  //Longer snake need to have minimal tolerance, can easily get trapped
+  //Shorter snake we can go for the bonus without checking because the risk is minimal
+  int mapSize = (mapSize + mapysize)/2; //Calculate the average dimension of the map
+  int tolerance = mapSize/2 - snakeLength/3; //To optimize the division constants later with tests (zid bash code test_sequence bach tshl 3lina test)
+
+  //Ensure minimum tolerance of 5
+  if (tolerance < 5) tolerance = 5;
+
   //Here we will store the target position, it will be either tail or bonus
   Position target;
 
-  //Here we will check for the best target between the bonus and the tail, to stay safe and be greedy (a bit :D)
-  if (bonus_found){
-    //We found the bonus
-    //Calculate the distances
+  //Here we will check for the best target between the bonus and the tail, to stay safe and be greedy (based on the tolenrance calculated)
+  if (snakeLength <= 5){//Small snake, very low risk of getting trapped (in big maps)
+    target = bonusPos;
+  } else {//Big snake, be careful and calculate the optimal target between the bonus and tail to stay safe and progress
+    //Calculate the distances:
     int distHeadToBonus = abs(headPos.x - bonusPos.x) + abs(headPos.y - bonusPos.y);//Head to bonus distance
     int distHeadToTail = abs(headPos.x - tailPos.x) + abs(headPos.y - tailPos.y); // Head to tail distance
     int distBonusToTail = abs(bonusPos.x - tailPos.x) + abs(bonusPos.y - tailPos.y);// Bonus to tail distance
 
-    //If the bonus is in the path to the tail (or close (3 cells more as max)), go to the bonus directly
+    //If the bonus is in the path to the tail (or close (tolerance as max number of cells)), go to the bonus directly
     //Otherwise go to tail to stay safe and not get trapped
-    if (distHeadToBonus + distBonusToTail <= distHeadToTail + 55){
+    if (distHeadToBonus + distBonusToTail <= distHeadToTail + tolerance){
       target = bonusPos; //The bonus is on our path or very close so we go for it
     } else {
       target = tailPos; //Otherwise chase the tail to stay safe
     }
-
-  } else {
-    target = tailPos; //No bonus, chase tail (this case is not possible but we implement it to stay safe in case of errors or bugs)
   }
 
   //Here wee find the best move to reach the target we set, based on a score we will calculate for each move
@@ -626,8 +629,8 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
     int newY = headPos.y + dy[i];
 
     //Check if this move is valid
-    if (!actionValid(moves[i], map, headPos.x, headPos.y)){
-      continue; //If action not valid we skip this move
+    if (!actionValid(moves[i], map, headPos.x, headPos.y)){//If action not valid we skip this move
+      continue;
     }
 
     int score = 0; //Store the score of the current move based on:
