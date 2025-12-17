@@ -51,6 +51,7 @@ static Position getHeadPos(s);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
 static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int);
+static bool findHamiltonianPath(graph *, int *, int, int *, int, int, int **, int *);
 
 /*
   snake function called from the main program
@@ -483,4 +484,53 @@ static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int 
   }
 
   return false; //Not a hamiltonian path
+}
+
+/*
+  findHamiltonianPath function:
+  This function initializes and finds a Hamiltonian path from head-adjacent to tail-adjacent
+*/
+static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdjacentCount, int *tailAdjacentIndices, int tailAdjacentCount, int bonus_idx, int **result_path, int *path_length){
+  /*
+  We take in the graph where we're looking for the hamiltonian path,
+  the head and tail adjacent indices and count to know from where to start the path and where to end it,
+  the bonus index to see if we go through the bonus (this will be useful for optimization),
+  a pointer to the result path where we store the final result path, which starts adjacent to the head and ends adjacent to the tail and passes through the bonus,
+  and a pointer to store the path's length, which should match the node count of the graph.
+  */
+  
+  //Try starting from nodes adjacent to the head
+  for (int i = 0; i < headAdjacentCount; i++){
+    int start_idx = headAdjacentIndices[i];
+
+    //Initialize path state
+    PathState state;
+    state.path = (int*)malloc(sizeof(int) * g->node_count);//Allocate memory for the path array
+    state.visited = (bool*)calloc(g->node_count, sizeof(bool));//Allocate memory and initialize with false
+    state.path_length = 0;
+    state.bonus_visited = false;
+
+    if (state.path == NULL || state.visited == NULL){//Memory allocation failed on one of them
+      free(state.path);
+      free(state.visited);
+      return false;
+    }
+
+    //Find path using recursive backtracking 
+    bool found = findHamiltonianRec(g, &state, start_idx, tailAdjacentIndices, tailAdjacentCount, bonus_idx);
+
+    if (found){//We found a hamiltonian path
+      *result_path = state.path;
+      *path_length = state.path_length;
+      free(state.visited);
+      return true;
+    }
+
+    //Clean up if not found with this start
+    free(state.path);
+    free(state.visited);
+  }
+
+  //No paths have been found
+  return false;
 }
