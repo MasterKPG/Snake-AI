@@ -50,7 +50,7 @@ static Position getHeadPos(s);
 static Position getHeadPos(s);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
-static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int)
+static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int);
 
 /*
   snake function called from the main program
