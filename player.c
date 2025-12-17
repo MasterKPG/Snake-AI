@@ -50,6 +50,7 @@ static Position getHeadPos(s);
 static Position getHeadPos(s);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
+static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int)
 
 /*
   snake function called from the main program
@@ -404,4 +405,82 @@ static int getTailAdjacentIndices(graph *g, Position tailPos, int *indices){
     }
   }
   return found_count;
+}
+
+/*
+  findHamiltonianRec function:
+  This function uses recursive backtracking to find hamiltonian path
+*/
+static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int *tailAdjacentIndices, int tailAdjacentCount, int bonus_idx){
+  /*we take in the graph where we do the search, the pathstate pointer where we return the path,
+  the current node index for recursion, the tail adjacent indices and their count to know where we stop for the search,
+  and the bonus index to see if we pass through it (we will surely do because it's a hamiltonian path and this is added for eventual optimizations)
+  */
+
+  state->path[state->path_length++] = current_idx; //Add current node to the path
+  state->visited[current_idx] = true; //We visited this node because we're on it right now
+
+  //Check if it's the bonus
+  if (current_idx == bonus_idx){
+    state->bonus_visited = true;
+  }
+
+  //Check if we found a complete hamiltonian path
+  if (state->path_length == g->node_count){//We went trhough all nodes 
+    //Must end adjacent to tail and pass by the bonus
+    if (state->bonus_visited){
+      //Check if we're adjacent to tail
+      for (int i = 0; i < tailAdjacentCount; i++){
+        if (current_idx == tailAdjacentIndices[i]){
+          return true;
+        }
+      }
+    }
+  
+    //Backtrack if conditions not met
+    //We take out the current index from the path
+    state->path_length--;
+    state->visited[current_idx] = false;
+    if (current_idx == bonus_idx){//The current index is the bonus, set the visited variable to false since it got taken out of the path
+      state->bonus_visited = false;
+    }
+    return false;
+  }
+
+  //Try all adjacent unvisited nodes
+  for (int next_idx = 0; next_idx < g->node_count; next_idx++){
+    if (g->adjacency[current_idx][next_idx] && !state->visited[next_idx]){
+
+      //If the next index is adjacent and not visited
+
+      //OPTIMIZATION : if this is the last cell, check if it's adjacent to tail
+      if (state->path_length == g->node_count - 1){
+        bool is_tail_adjacent = false;
+        for (int i = 0; i < tailAdjacentCount; i++){
+          if (next_idx == tailAdjacentIndices[i]){//It's adjacent to the tail
+            is_tail_adjacent = true;
+            break;
+          }
+        }
+
+        if (!is_tail_adjacent){//If it's not adjacent to the tail, skip
+          continue;
+        }
+      }
+
+      if (findHamiltonianRec(g, state, next_idx, tailAdjacentIndices, tailAdjacentCount, bonus_idx)){
+        //Recall the function on the next index, if the path is complete, return true, otherwise backtrack
+        return true;
+      }
+    }
+  }
+
+  //Backtrack
+  state->path_length--;
+  state->visited[current_idx] = false;
+  if (current_idx == bonus_idx){
+    state->bonus_visited = false;
+  }
+
+  return false; //Not a hamiltonian path
 }
