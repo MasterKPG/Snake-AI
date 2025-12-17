@@ -34,7 +34,6 @@ typedef struct {
     int *path;           /* Array of node indices */
     bool *visited;       /* Visited array */
     int path_length;     /* Current path length */
-    bool bonus_visited;  /* Flag to track if bonus was visited */
 } PathState;
 
 // prototypes of the local/private functions
@@ -50,7 +49,7 @@ static Position getHeadPos(snake_list);
 static Position getTailPos(snake_list);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
-static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int);
+static bool findHamiltonianRec(graph *, PathState *, int, int *, int);
 static bool findHamiltonianPath(graph *, int *, int, int *, int, int, int **, int *);
 static action getDirection(Position, Position);
 static void freeGraph(graph *);
@@ -459,39 +458,28 @@ static int getTailAdjacentIndices(graph *g, Position tailPos, int *indices){
   findHamiltonianRec function:
   This function uses recursive backtracking to find hamiltonian path
 */
-static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int *tailAdjacentIndices, int tailAdjacentCount, int bonus_idx){
+static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int *tailAdjacentIndices, int tailAdjacentCount){
   /*we take in the graph where we do the search, the pathstate pointer where we return the path,
   the current node index for recursion, the tail adjacent indices and their count to know where we stop for the search,
-  and the bonus index to see if we pass through it (we will surely do because it's a hamiltonian path and this is added for eventual optimizations)
   */
 
   state->path[state->path_length++] = current_idx; //Add current node to the path
   state->visited[current_idx] = true; //We visited this node because we're on it right now
 
-  //Check if it's the bonus
-  if (current_idx == bonus_idx){
-    state->bonus_visited = true;
-  }
-
   //Check if we found a complete hamiltonian path
   if (state->path_length == g->node_count){//We went trhough all nodes 
-    //Must end adjacent to tail and pass by the bonus
-    if (state->bonus_visited){
-      //Check if we're adjacent to tail
-      for (int i = 0; i < tailAdjacentCount; i++){
-        if (current_idx == tailAdjacentIndices[i]){
-          return true;
-        }
+    //Must end adjacent to tail
+    //Check if we're adjacent to tail
+    for (int i = 0; i < tailAdjacentCount; i++){
+      if (current_idx == tailAdjacentIndices[i]){
+        return true;
       }
     }
   
-    //Backtrack if conditions not met
+    //Backtrack if not adjacent to tail
     //We take out the current index from the path
     state->path_length--;
     state->visited[current_idx] = false;
-    if (current_idx == bonus_idx){//The current index is the bonus, set the visited variable to false since it got taken out of the path
-      state->bonus_visited = false;
-    }
     return false;
   }
 
@@ -516,7 +504,7 @@ static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int 
         }
       }
 
-      if (findHamiltonianRec(g, state, next_idx, tailAdjacentIndices, tailAdjacentCount, bonus_idx)){
+      if (findHamiltonianRec(g, state, next_idx, tailAdjacentIndices, tailAdjacentCount)){
         //Recall the function on the next index, if the path is complete, return true, otherwise backtrack
         return true;
       }
@@ -526,9 +514,6 @@ static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int 
   //Backtrack
   state->path_length--;
   state->visited[current_idx] = false;
-  if (current_idx == bonus_idx){
-    state->bonus_visited = false;
-  }
 
   return false; //Not a hamiltonian path
 }
@@ -541,7 +526,6 @@ static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdja
   /*
   We take in the graph where we're looking for the hamiltonian path,
   the head and tail adjacent indices and count to know from where to start the path and where to end it,
-  the bonus index to see if we go through the bonus (this will be useful for optimization),
   a pointer to the result path where we store the final result path, which starts adjacent to the head and ends adjacent to the tail and passes through the bonus,
   and a pointer to store the path's length, which should match the node count of the graph.
   */
@@ -555,7 +539,6 @@ static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdja
     state.path = (int*)malloc(sizeof(int) * g->node_count);//Allocate memory for the path array
     state.visited = (bool*)calloc(g->node_count, sizeof(bool));//Allocate memory and initialize with false
     state.path_length = 0;
-    state.bonus_visited = false;
 
     if (state.path == NULL || state.visited == NULL){//Memory allocation failed on one of them
       free(state.path);
@@ -564,7 +547,7 @@ static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdja
     }
 
     //Find path using recursive backtracking 
-    bool found = findHamiltonianRec(g, &state, start_idx, tailAdjacentIndices, tailAdjacentCount, bonus_idx);
+    bool found = findHamiltonianRec(g, &state, start_idx, tailAdjacentIndices, tailAdjacentCount);
 
     if (found){//We found a hamiltonian path
       *result_path = state.path;
