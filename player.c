@@ -38,7 +38,6 @@ typedef struct {
 
 // prototypes of the local/private functions
 static void printAction(action);
-static void printBoolean(bool);
 static bool actionValid(action, char **, int, int);
 //static bool isSnakeBody(snake_list, int, int);
 //static graph* createGraph(char **, snake_list, int, int);
@@ -133,19 +132,6 @@ static void printAction(action a) {
   case WEST:
     printf("WEST");
     break;
-  }
-}
-
-/*
-  printBoolean funtion:
-  This function prints the input boolan value on screen.
-*/
-static void printBoolean(bool b) {
-  if(b) {
-    printf("true");
-  }
-  else {
-    printf("false");
   }
 }
 
@@ -592,7 +578,7 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
   //Calculate dynamic tolerance (ignore getting trapped) based on snake length and map size
   //Longer snake need to have minimal tolerance, can easily get trapped
   //Shorter snake we can go for the bonus without checking because the risk is minimal
-  int mapSize = (mapSize + mapysize)/2; //Calculate the average dimension of the map
+  int mapSize = (mapxsize + mapysize)/2; //Calculate the average dimension of the map
   int tolerance = mapSize/2 - snakeLength/3; //To optimize the division constants later with tests (zid bash code test_sequence bach tshl 3lina test)
 
   //Ensure minimum tolerance of 5
