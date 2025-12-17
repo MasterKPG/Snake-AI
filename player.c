@@ -55,6 +55,7 @@ static Position getTailPos(snake_list);
 //static void freeGraph(graph *);
 static action followTailStrategy(char **, int, int, Position, Position, Position, bool);
 static int countValidMoves(char **, int, int);
+static int getSnakeLength(snake_list);
 
 
 /*
@@ -653,4 +654,18 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
   }
 
   return best_move;
+}
+
+/*
+  getSnakeLength function:
+  This function returns the length of the snake
+*/
+static int getSnakeLength(snake_list s){
+  int length = 0;
+  snake_list current = s;
+  while(current != NULL){
+    length++;
+    current = current->next;
+  }
+  return length;
 }
