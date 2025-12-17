@@ -53,6 +53,7 @@ static int getTailAdjacentIndices(graph *, Position, int *);
 static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int);
 static bool findHamiltonianPath(graph *, int *, int, int *, int, int, int **, int *);
 static action getDirection(Position, Position);
+static void freeGraph(graph *);
 
 /*
   snake function called from the main program
@@ -113,7 +114,51 @@ action snake(
   //-----------------------------------------------------------------------------------------------------------
   
   do {
-    a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
+    //a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
+
+    //Build graph from map (excluding snake body)
+    graph *g = createGraph(map, s, mapxsize, mapysize);
+    
+    if (g == NULL){//Failed to make the graph, return a random move
+      a = rand()%4;
+    }
+
+    //Find bonus index in the graph
+    int bonus_idx = findNode(g, bonusPos.x, bonusPos.y);
+
+    if (bonus_idx == -1){//Failed to find the bonus, free the graph and choose a random move
+      freeGraph(g);
+      a = rand()%4;
+    }
+
+    //Get cells and counts of cells adjacent to head and tail
+    int headAdjacentIndices[4];
+    int tailAdjacentIndices[4];
+
+    int headAdjacentCount = getHeadAdjacentIndices(g, headPos, headAdjacentIndices);
+    int tailAdjacentCount = getTailAdjacentIndices(g, tailPos, tailAdjacentIndices);
+
+    if (headAdjacentCount == 0 || tailAdjacentCount == 0){//no adjacent cells to neither, free the graph and choose a random move
+      freeGraph(g);
+      a = rand()%4;
+    }
+
+    //Find hamiltonian path from a cell adjacent to the head to a cell adjacent to a cell adjacent to the tail
+    int *path = NULL;
+    int path_length = 0;
+    bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, bonus_idx, &path, &path_length); 
+
+    if (found && path_length >= 1){//We found a path of at least 1 node
+      //Get the first position in the path (adjacent  to the head)
+      Position next = g->nodes[path[0]];
+
+      //Calculate the direction from the head to next (the adjacent cell)
+      a = getDirection(headPos, next);
+
+      free(path); //free the path since we already got the action we're looking for 
+    }
+
+    freeGraph(g);
 
     if(DEBUG) { // print the randomly selected action, only in DEBUG mode
       printf("Candidate action is: ");
@@ -549,4 +594,23 @@ static action getDirection(Position from, Position to){
   if (dx == -1 && dy == 0) return WEST;
   if (dx == 0 && dy == 1) return SOUTH;
   if (dx == 0 && dy == -1) return NORTH;
+}
+
+/*
+  freeGraph function:
+  This function frees the memory allocated to the graph
+*/
+static void freeGraph(graph *g){
+  if (g == NULL) return;
+
+  if (g->adjacency != NULL){
+    for (int i = 0; i < g->node_count; i++){
+      free(g->adjacency[i]);
+    }
+    free(g->adjacency);
+  }
+
+  free(g->nodes);
+  free(g);
+
 }
