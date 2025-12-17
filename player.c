@@ -534,3 +534,18 @@ static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdja
   //No paths have been found
   return false;
 }
+
+/*
+  getDirection function:
+  This function takes in 2 positions next to eachother and gives back the direction to go from the first to the second
+*/
+static action getDirection(Position from, Position to){
+  //Distance between them
+  int dx = to.x - from.x;
+  int dy = to.y - from.y;
+
+  if (dx == 1 && dy == 0) return EAST;
+  if (dx == -1 && dy == 0) return WEST;
+  if (dx == 0 && dy == 1) return SOUTH;
+  if (dx == 0 && dy == -1) return NORTH;
+}
