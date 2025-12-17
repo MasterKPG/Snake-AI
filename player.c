@@ -663,7 +663,7 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
 static int getSnakeLength(snake_list s){
   int length = 0;
   snake_list current = s;
-  while(current != NULL){
+  while(current != NULL){ //Not the end of the snake
     length++;
     current = current->next;
   }
