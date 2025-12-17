@@ -46,8 +46,8 @@ static graph* createGraph(char **, snake_list, int, int);
 static int countFreePixels(char **, snake_list, int, int);
 static int findNode(graph *, int, int);
 static int adjacentPos(int, int, Position *);
-static Position getHeadPos(s);
-static Position getHeadPos(s);
+static Position getHeadPos(snake_list);
+static Position getTailPos(snake_list);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
 static bool findHamiltonianRec(graph *, PathState *, int, int *, int, int);
@@ -407,15 +407,16 @@ static Position getHeadPos(snake_list s){
   This function takes in the snake list and returns the position of the tail in a Position type variable.
 */
 static Position getTailPos(snake_list s){
-  Position TailPos;
+  Position tailPos;
   snake_list current = s;
 
   while(current->next != NULL){
     current = current->next;
   }
 
-  TailPos.x = current->x;
-  TailPos.y = current->y;
+  tailPos.x = current->x;
+  tailPos.y = current->y;
+  return tailPos;
 }
 
 /*
@@ -594,6 +595,8 @@ static action getDirection(Position from, Position to){
   if (dx == -1 && dy == 0) return WEST;
   if (dx == 0 && dy == 1) return SOUTH;
   if (dx == 0 && dy == -1) return NORTH;
+
+  return rand()%4; //return random action (to fix error since we need to have a return otherwise it bugs)
 }
 
 /*
