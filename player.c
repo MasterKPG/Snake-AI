@@ -40,19 +40,19 @@ typedef struct {
 static void printAction(action);
 static void printBoolean(bool);
 static bool actionValid(action, char **, int, int);
-static bool isSnakeBody(snake_list, int, int);
-static graph* createGraph(char **, snake_list, int, int);
-static int countFreePixels(char **, snake_list, int, int);
-static int findNode(graph *, int, int);
-static int adjacentPos(int, int, Position *);
+//static bool isSnakeBody(snake_list, int, int);
+//static graph* createGraph(char **, snake_list, int, int);
+//static int countFreePixels(char **, snake_list, int, int);
+//static int findNode(graph *, int, int);
+//static int adjacentPos(int, int, Position *);
 static Position getHeadPos(snake_list);
 static Position getTailPos(snake_list);
-static int getHeadAdjacentIndices(graph *, Position, int *);
-static int getTailAdjacentIndices(graph *, Position, int *);
-static bool findHamiltonianRec(graph *, PathState *, int, int *, int);
-static bool findHamiltonianPath(graph *, int *, int, int *, int, int **, int *);
-static action getDirection(Position, Position);
-static void freeGraph(graph *);
+//static int getHeadAdjacentIndices(graph *, Position, int *);
+//static int getTailAdjacentIndices(graph *, Position, int *);
+//static bool findHamiltonianRec(graph *, PathState *, int, int *, int);
+//static bool findHamiltonianPath(graph *, int *, int, int *, int, int **, int *);
+//static action getDirection(Position, Position);
+//static void freeGraph(graph *);
 static action followTailStrategy(char **, int, int, Position, Position, Position, bool);
 static int countValidMoves(char **, int, int);
 
@@ -109,79 +109,13 @@ action snake(
   }
   //-----------------------------------------------------------------------------------------------------------
 
-  //Build graph from map (excluding snake body)
-  graph *g = createGraph(map, s, mapxsize, mapysize);
-    
-  if (g == NULL){//Failed to make the graph, return a random move
-    do {
-      a = rand()%4;
-    } while (!actionValid(a, map, headPos.x, headPos.y) &&
-             (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
-              map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
-              map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
-              map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS));
-    return a;
-  }
-
-  //Get cells and counts of cells adjacent to head and tail
-  int headAdjacentIndices[4];
-  int tailAdjacentIndices[4];
-
-  int headAdjacentCount = getHeadAdjacentIndices(g, headPos, headAdjacentIndices);
-  int tailAdjacentCount = getTailAdjacentIndices(g, tailPos, tailAdjacentIndices);
-
-  if (headAdjacentCount == 0 || tailAdjacentCount == 0){//no adjacent cells to neither, free the graph and choose a random move
-    freeGraph(g);
-    do {
-      a = rand()%4;
-    } while (!actionValid(a, map, headPos.x, headPos.y) &&
-             (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
-              map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
-              map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
-              map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS));
-    return a;
-  }
-
-  //Find hamiltonian path from a cell adjacent to the head to a cell adjacent to a cell adjacent to the tail
-  int *path = NULL;
-  int path_length = 0;
-  bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, &path, &path_length); 
-
-  if (found && path_length >= 1){//We found a path of at least 1 node
-    //Get the first position in the path (adjacent  to the head)
-    Position next = g->nodes[path[0]];
-
-    //Calculate the direction from the head to next (the adjacent cell)
-    a = getDirection(headPos, next);
-
-    if (DEBUG){
-      printf("Hamiltonian path found ! Moving: ");
-      printAction(a);
-      printf("\n");
-    }
-
-    free(path); //free the path since we already got the action we're looking for 
-    freeGraph(g);
-    return a;
-  }
-
-  //No hamiltonian path found
+  a = followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, bonus_found);
 
   if (DEBUG){
-    printf("No hamiltonian path found, choosing a random move\n");
+    printf("Follow tail strategy, moving: ");
+    printAction(a);
+    printf("\n");
   }
-  free(path);
-  freeGraph(g);
-
-  //Choose a random move
-  do {
-    a = rand()%4;
-  } while (!actionValid(a, map, headPos.x, headPos.y) &&
-    (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
-     map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
-     map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
-     map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS)
-  );
 
   return a; // answer to the game engine
 }
@@ -259,6 +193,7 @@ static bool actionValid(action a, char ** map, int x, int y){
   This function checks if the coordinates passed in the arguments are occupied by the snake's body 
   (including head and tail).
 */
+/*
 static bool isSnakeBody(snake_list s, int x, int y){
   snake_list current = s;
   while(current != NULL){
@@ -269,6 +204,7 @@ static bool isSnakeBody(snake_list s, int x, int y){
   }
   return false;
 }
+*/
 
 /*
   createGraph function:
@@ -276,6 +212,7 @@ static bool isSnakeBody(snake_list s, int x, int y){
   making the nodes array which contains the nodes with their indices and coordinates and then makes the adjacency matrix of the graph
   Returns the graph variable containing the nodes array, node_count and the adjacency matrix
 */
+/*
 static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
   graph *g = (graph*)malloc(sizeof(graph));
   if (g == NULL) return NULL; //Failed memory allocation
@@ -338,11 +275,13 @@ static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
   }
   return g; //The graph is ready, with the nodes array and the adjacency matrix full
 }
+*/
 
 /*
   countFreeCells function:
   This function counts the free cells in the map excluding the entire snake from head to tail.
 */
+/*
 static int countFreePixels(char **map, snake_list s, int mapxsize, int mapysize){
   int count = 0; //Local variable to count the free cells
   for (int i = 0; i < mapxsize; i++){
@@ -353,23 +292,27 @@ static int countFreePixels(char **map, snake_list s, int mapxsize, int mapysize)
   }
   return count;
 }
+*/
 
 /*
   findNode function:
   This function goes through the nodes array and returns the index of the node in the coordinates x and y
 */
+/*
 static int findNode(graph *g, int x, int y){
   for (int i = 0; i < g->node_count; i++){//Go through the nodes until the last one, look for a match in coordinates 
     if (g->nodes[i].x == x && g->nodes[i].y == y) return i;//If the coordinates match, return the index
   }
   return -1;//Else return -1
 }
+*/
 
 /*
   adjacentPos function:
   This function takes in coordinates of a cell, and returns the count of possible adjacent positions,
   aswell as returning their coordinates in the adjacent array passed in the arguments.
 */
+/*
 static int adjacentPos(int x, int y, Position *adjacent){
   int count = 0;
 
@@ -395,6 +338,7 @@ static int adjacentPos(int x, int y, Position *adjacent){
 
   return count;
 }
+*/
 
 /*
   getHeadPos function:
@@ -428,6 +372,7 @@ static Position getTailPos(snake_list s){
   getHeadAdjacentIndices function:
   This function takes in the graph and position of the head and returns indices of free free cells adjacent to head
 */
+/*
 static int getHeadAdjacentIndices(graph *g, Position headPos, int *indices){
   Position adjacent[4]; //Array of adjacent positions
   int adj_count = adjacentPos(headPos.x, headPos.y, adjacent); //Count of adjacent positions
@@ -441,11 +386,13 @@ static int getHeadAdjacentIndices(graph *g, Position headPos, int *indices){
   }
   return found_count;
 }
+*/
 
 /*
   getTailAdjacentIndices function:
   This function takes in the graph and position of the tail and returns indices of free free cells adjacent to tail
 */
+/*
 static int getTailAdjacentIndices(graph *g, Position tailPos, int *indices){
   Position adjacent[4]; //Array of adjacent positions
   int adj_count = adjacentPos(tailPos.x, tailPos.y, adjacent); //Count of adjacent positions
@@ -459,15 +406,17 @@ static int getTailAdjacentIndices(graph *g, Position tailPos, int *indices){
   }
   return found_count;
 }
+*/
 
 /*
   findHamiltonianRec function:
   This function uses recursive backtracking to find hamiltonian path
 */
+/*
 static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int *tailAdjacentIndices, int tailAdjacentCount){
-  /*we take in the graph where we do the search, the pathstate pointer where we return the path,
-  the current node index for recursion, the tail adjacent indices and their count to know where we stop for the search,
-  */
+  //We take in the graph where we do the search, the pathstate pointer where we return the path,
+  //the current node index for recursion, the tail adjacent indices and their count to know where we stop for the search,
+  
 
   state->path[state->path_length++] = current_idx; //Add current node to the path
   state->visited[current_idx] = true; //We visited this node because we're on it right now
@@ -523,18 +472,20 @@ static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int 
 
   return false; //Not a hamiltonian path
 }
+*/
 
 /*
   findHamiltonianPath function:
   This function initializes and finds a Hamiltonian path from head-adjacent to tail-adjacent
 */
+/*
 static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdjacentCount, int *tailAdjacentIndices, int tailAdjacentCount, int **result_path, int *path_length){
-  /*
-  We take in the graph where we're looking for the hamiltonian path,
-  the head and tail adjacent indices and count to know from where to start the path and where to end it,
-  a pointer to the result path where we store the final result path, which starts adjacent to the head and ends adjacent to the tail and passes through the bonus,
-  and a pointer to store the path's length, which should match the node count of the graph.
-  */
+  
+  //We take in the graph where we're looking for the hamiltonian path,
+  //the head and tail adjacent indices and count to know from where to start the path and where to end it,
+  //a pointer to the result path where we store the final result path, which starts adjacent to the head and ends adjacent to the tail and passes through the bonus,
+  //and a pointer to store the path's length, which should match the node count of the graph.
+  
   
   //Try starting from nodes adjacent to the head
   for (int i = 0; i < headAdjacentCount; i++){
@@ -570,11 +521,13 @@ static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdja
   //No paths have been found
   return false;
 }
+*/
 
 /*
   getDirection function:
   This function takes in 2 positions next to eachother and gives back the direction to go from the first to the second
 */
+/*
 static action getDirection(Position from, Position to){
   //Distance between them
   int dx = to.x - from.x;
@@ -587,11 +540,13 @@ static action getDirection(Position from, Position to){
 
   return rand()%4; //return random action (to fix error since we need to have a return otherwise it bugs)
 }
+*/
 
 /*
   freeGraph function:
   This function frees the memory allocated to the graph
 */
+/*
 static void freeGraph(graph *g){
   if (g == NULL) return;
 
@@ -606,6 +561,7 @@ static void freeGraph(graph *g){
   free(g);
 
 }
+*/
 
 //Functions for the new strategy (follow tail and grab bonus if on the same path as the tail or close to the path)
 /*
@@ -649,7 +605,7 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
 
     //If the bonus is in the path to the tail (or close (3 cells more as max)), go to the bonus directly
     //Otherwise go to tail to stay safe and not get trapped
-    if (distHeadToBonus + distBonusToTail <= distHeadToTail + 3){
+    if (distHeadToBonus + distBonusToTail <= distHeadToTail + 55){
       target = bonusPos; //The bonus is on our path or very close so we go for it
     } else {
       target = tailPos; //Otherwise chase the tail to stay safe
