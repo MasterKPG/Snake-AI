@@ -67,11 +67,8 @@ action snake(
 	     ) {
   action a; // action to choose and return
   
-  bool ok=false; // ok will be set to true as soon as a randomly selected action is valid
-
   //Coordinates of the snake's head---------------------------------------------------------------------------
-  Position headPos;
-  headPos = getHeadPos(s);
+  Position headPos = getHeadPos(s);
 
   if (DEBUG){//Print the coordinates of the of the head
     printf("X coordinates of the head = %d\nY coordinates of the head = %d\n", headPos.x, headPos.y);
@@ -79,10 +76,7 @@ action snake(
   //----------------------------------------------------------------------------------------------------------
 
   //Coordinates of the snake's tail---------------------------------------------------------------------------
-  Position tailPos;
-
-  //Use the function getTailPos to assign the coordinates of the tail to tailPos.x and tailPos.y
-  tailPos = getTailPos(s);
+  Position tailPos = getTailPos(s);
 
   if (DEBUG){//Print the coordinates of the tail
     printf("X coordinates of the tail = %d\nY coordinates of the tail = %d\n", tailPos.x, tailPos.y);
@@ -93,90 +87,98 @@ action snake(
   Position bonusPos;
 
   //Look for the Bonus (we start from 1 and subtract 1 to not waste time looking in the walls)
-  bool found = false;
-  for (int row = 1; row < mapysize - 1 && !found; row++)
-    for (int col = 1; col < mapxsize - 1 && !found; col++)
+  bool bonus_found = false;
+  for (int row = 1; row < mapysize - 1 && !bonus_found; row++)
+    for (int col = 1; col < mapxsize - 1 && !bonus_found; col++)
       if (map[row][col] == BONUS){
         bonusPos.x = col;
         bonusPos.y = row;
-        found = true;
+        bonus_found = true;
       }
   
   if (DEBUG){ //Print the coordinates if the bonus has been found
-    if (found){
+    if (bonus_found){
       printf("X coordinates of the bonus = %d\nY coordinates of the bonus = %d\n", bonusPos.x, bonusPos.y);
     }
     printf("The bonus has been found: ");
-    printBoolean(found);
+    printBoolean(bonus_found);
     printf("\n");
   }
   //-----------------------------------------------------------------------------------------------------------
-  
-  do {
-    //a=rand()%4; // ramdomly select one of the 4 possible actions: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST
 
-    //Build graph from map (excluding snake body)
-    graph *g = createGraph(map, s, mapxsize, mapysize);
+  //Build graph from map (excluding snake body)
+  graph *g = createGraph(map, s, mapxsize, mapysize);
     
-    if (g == NULL){//Failed to make the graph, return a random move
+  if (g == NULL){//Failed to make the graph, return a random move
+    do {
       a = rand()%4;
-    }
+    } while (!actionValid(a, map, headPos.x, headPos.y) &&
+             (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
+              map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
+              map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
+              map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS));
+    return a;
+  }
 
-    //Find bonus index in the graph
-    int bonus_idx = findNode(g, bonusPos.x, bonusPos.y);
+  //Get cells and counts of cells adjacent to head and tail
+  int headAdjacentIndices[4];
+  int tailAdjacentIndices[4];
 
-    if (bonus_idx == -1){//Failed to find the bonus, free the graph and choose a random move
-      freeGraph(g);
-      a = rand()%4;
-    }
+  int headAdjacentCount = getHeadAdjacentIndices(g, headPos, headAdjacentIndices);
+  int tailAdjacentCount = getTailAdjacentIndices(g, tailPos, tailAdjacentIndices);
 
-    //Get cells and counts of cells adjacent to head and tail
-    int headAdjacentIndices[4];
-    int tailAdjacentIndices[4];
-
-    int headAdjacentCount = getHeadAdjacentIndices(g, headPos, headAdjacentIndices);
-    int tailAdjacentCount = getTailAdjacentIndices(g, tailPos, tailAdjacentIndices);
-
-    if (headAdjacentCount == 0 || tailAdjacentCount == 0){//no adjacent cells to neither, free the graph and choose a random move
-      freeGraph(g);
-      a = rand()%4;
-    }
-
-    //Find hamiltonian path from a cell adjacent to the head to a cell adjacent to a cell adjacent to the tail
-    int *path = NULL;
-    int path_length = 0;
-    bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, &path, &path_length); 
-
-    if (found && path_length >= 1){//We found a path of at least 1 node
-      //Get the first position in the path (adjacent  to the head)
-      Position next = g->nodes[path[0]];
-
-      //Calculate the direction from the head to next (the adjacent cell)
-      a = getDirection(headPos, next);
-
-      free(path); //free the path since we already got the action we're looking for 
-    }
-
+  if (headAdjacentCount == 0 || tailAdjacentCount == 0){//no adjacent cells to neither, free the graph and choose a random move
     freeGraph(g);
+    do {
+      a = rand()%4;
+    } while (!actionValid(a, map, headPos.x, headPos.y) &&
+             (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
+              map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
+              map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
+              map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS));
+    return a;
+  }
 
-    if(DEBUG) { // print the randomly selected action, only in DEBUG mode
-      printf("Candidate action is: ");
+  //Find hamiltonian path from a cell adjacent to the head to a cell adjacent to a cell adjacent to the tail
+  int *path = NULL;
+  int path_length = 0;
+  bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, &path, &path_length); 
+
+  if (found && path_length >= 1){//We found a path of at least 1 node
+    //Get the first position in the path (adjacent  to the head)
+    Position next = g->nodes[path[0]];
+
+    //Calculate the direction from the head to next (the adjacent cell)
+    a = getDirection(headPos, next);
+
+    if (DEBUG){
+      printf("Hamiltonian path found ! Moving: ");
       printAction(a);
       printf("\n");
     }
 
-    ok = actionValid(a, map, headPos.x, headPos.y);
+    free(path); //free the path since we already got the action we're looking for 
+    freeGraph(g);
+    return a;
+  }
 
-    if(DEBUG) { // print whether the randomly selected action is valid, only in DEBUG mode
-      printf("Is this candidate action valid? ");
-      printBoolean(ok);
-      printf("\n");
-    }
-  // while the selected action is not valid and there exists a valide move
-  } while(!ok && (map[s->y-1][s->x]==PATH || map[s->y-1][s->x]==BONUS  
-		  || map[s->y][s->x+1]==PATH || map[s->y][s->x+1]==BONUS
-		  || map[s->y+1][s->x]==PATH || map[s->y+1][s->x]==BONUS
-		  || map[s->y][s->x-1]==PATH || map[s->y][s->x-1]==BONUS));
+  //No hamiltonian path found
+
+  if (DEBUG){
+    printf("No hamiltonian path found, choosing a random move\n");
+  }
+  free(path);
+  freeGraph(g);
+
+  //Choose a random move
+  do {
+    a = rand()%4;
+  } while (!actionValid(a, map, headPos.x, headPos.y) &&
+    (map[s->y-1][s->x] == PATH || map[s->y-1][s->x] == BONUS ||
+     map[s->y][s->x+1] == PATH || map[s->y][s->x+1] == BONUS ||
+     map[s->y+1][s->x] == PATH || map[s->y+1][s->x] == BONUS ||
+     map[s->y][s->x-1] == PATH || map[s->y][s->x-1] == BONUS)
+  );
 
   return a; // answer to the game engine
 }
@@ -316,6 +318,7 @@ static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
       free(g->adjacency);
       free(g->nodes);
       free(g);
+      return NULL;
     }
   }
   
