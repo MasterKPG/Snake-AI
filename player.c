@@ -46,8 +46,10 @@ static graph* createGraph(char **, snake_list, int, int);
 static int countFreePixels(char **, snake_list, int, int);
 static int findNode(graph *, int, int);
 static int adjacentPos(int, int, Position *);
-Position getHeadPos(s);
-Position getHeadPos(s);
+static Position getHeadPos(s);
+static Position getHeadPos(s);
+static int getHeadAdjacentIndices(graph *, Position, int *);
+static int getTailAdjacentIndices(graph *, Position, int *);
 
 /*
   snake function called from the main program
@@ -345,7 +347,7 @@ static int adjacentPos(int x, int y, Position *adjacent){
   getHeadPos function:
   This function takes in the snake list and returns the position of the head in the Position type variable.
 */
-Position getHeadPos(snake_list s){
+static Position getHeadPos(snake_list s){
   Position HeadPos;
   HeadPos.x = s->x;
   HeadPos.y = s->y;
@@ -356,7 +358,7 @@ Position getHeadPos(snake_list s){
   getHeadPos function:
   This function takes in the snake list and returns the position of the tail in a Position type variable.
 */
-Position getTailPos(snake_list s){
+static Position getTailPos(snake_list s){
   Position TailPos;
   snake_list current = s;
 
@@ -366,4 +368,40 @@ Position getTailPos(snake_list s){
 
   TailPos.x = current->x;
   TailPos.y = current->y;
+}
+
+/*
+  getHeadAdjacentIndices function:
+  This function takes in the graph and position of the head and returns indices of free free cells adjacent to head
+*/
+static int getHeadAdjacentIndices(graph *g, Position headPos, int *indices){
+  Position adjacent[4]; //Array of adjacent positions
+  int adj_count = adjacentPos(headPos.x, headPos.y, adjacent); //Count of adjacent positions
+
+  int found_count = 0;
+  for (int i = 0; i < adj_count; i++){ //We go through the nodes and check if they exist inside the map, if so we add 1 to found_count and add it to the indices array
+    int index = findNode(g, adjacent[i].x, adjacent[i].y);
+    if (index != -1){//The node exists
+      indices[found_count++] = index;
+    }
+  }
+  return found_count;
+}
+
+/*
+  getTailAdjacentIndices function:
+  This function takes in the graph and position of the tail and returns indices of free free cells adjacent to tail
+*/
+static int getTailAdjacentIndices(graph *g, Position tailPos, int *indices){
+  Position adjacent[4]; //Array of adjacent positions
+  int adj_count = adjacentPos(tailPos.x, tailPos.y, adjacent); //Count of adjacent positions
+
+  int found_count = 0;
+  for (int i = 0; i < adj_count; i++){ //We go through the nodes and check if they exist inside the map, if so we add 1 to found_count and add it to the indices array
+    int index = findNode(g, adjacent[i].x, adjacent[i].y);
+    if (index != -1){//The node exists
+      indices[found_count++] = index;
+    }
+  }
+  return found_count;
 }
