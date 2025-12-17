@@ -339,7 +339,7 @@ static graph* createGraph(char **map, snake_list s, int mapxsize, int mapysize){
   This function counts the free cells in the map excluding the entire snake from head to tail.
 */
 static int countFreePixels(char **map, snake_list s, int mapxsize, int mapysize){
-  int count; //Local variable to count the free cells
+  int count = 0; //Local variable to count the free cells
   for (int i = 0; i < mapxsize; i++){
     for (int j = 0; j < mapysize; j++){
       //For a pixel to be free it has to be inside the map and not occupied by the snake's body
