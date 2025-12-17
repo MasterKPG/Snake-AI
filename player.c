@@ -50,7 +50,7 @@ static Position getTailPos(snake_list);
 static int getHeadAdjacentIndices(graph *, Position, int *);
 static int getTailAdjacentIndices(graph *, Position, int *);
 static bool findHamiltonianRec(graph *, PathState *, int, int *, int);
-static bool findHamiltonianPath(graph *, int *, int, int *, int, int, int **, int *);
+static bool findHamiltonianPath(graph *, int *, int, int *, int, int **, int *);
 static action getDirection(Position, Position);
 static void freeGraph(graph *);
 
@@ -145,7 +145,7 @@ action snake(
     //Find hamiltonian path from a cell adjacent to the head to a cell adjacent to a cell adjacent to the tail
     int *path = NULL;
     int path_length = 0;
-    bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, bonus_idx, &path, &path_length); 
+    bool found = findHamiltonianPath(g, headAdjacentIndices, headAdjacentCount, tailAdjacentIndices, tailAdjacentCount, &path, &path_length); 
 
     if (found && path_length >= 1){//We found a path of at least 1 node
       //Get the first position in the path (adjacent  to the head)
@@ -522,7 +522,7 @@ static bool findHamiltonianRec(graph *g, PathState *state, int current_idx, int 
   findHamiltonianPath function:
   This function initializes and finds a Hamiltonian path from head-adjacent to tail-adjacent
 */
-static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdjacentCount, int *tailAdjacentIndices, int tailAdjacentCount, int bonus_idx, int **result_path, int *path_length){
+static bool findHamiltonianPath(graph *g, int *headAdjacentIndices, int headAdjacentCount, int *tailAdjacentIndices, int tailAdjacentCount, int **result_path, int *path_length){
   /*
   We take in the graph where we're looking for the hamiltonian path,
   the head and tail adjacent indices and count to know from where to start the path and where to end it,
