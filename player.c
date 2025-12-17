@@ -53,6 +53,9 @@ static bool findHamiltonianRec(graph *, PathState *, int, int *, int);
 static bool findHamiltonianPath(graph *, int *, int, int *, int, int **, int *);
 static action getDirection(Position, Position);
 static void freeGraph(graph *);
+static action followTailStrategy(char **, int, int, Position, Position, Position, bool);
+static int countValidMoves(char **, int, int);
+
 
 /*
   snake function called from the main program
@@ -602,4 +605,96 @@ static void freeGraph(graph *g){
   free(g->nodes);
   free(g);
 
+}
+
+//Functions for the new strategy (follow tail and grab bonus if on the same path as the tail or close to the path)
+/*
+  countValidMoves function:
+  This function counts the valid moves possible, based on the position given by x and y coordinates
+*/
+static int countValidMoves(char **map, int x, int y){
+  int count = 0; //Counter to return the value
+
+  if (map[y-1][x] != WALL && map[y-1][x] != SNAKE_BODY && map[y-1][x] != SNAKE_TAIL) count++; // NORTH
+  if (map[y][x+1] != WALL && map[y][x+1] != SNAKE_BODY && map[y][x+1] != SNAKE_TAIL) count++; // EAST
+  if (map[y+1][x] != WALL && map[y+1][x] != SNAKE_BODY && map[y+1][x] != SNAKE_TAIL) count++; // SOUTH
+  if (map[y][x-1] != WALL && map[y][x-1] != SNAKE_BODY && map[y][x-1] != SNAKE_TAIL) count++; // WEST
+
+  return count;
+}
+
+/*
+  followTailStrategy function:
+  This function chooses the best move possible, one that will not trap us by following the tail
+  and help us take the bonus if it's close to the path to the tail.
+*/
+static action followTailStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, bool bonus_found){
+  
+  action moves[4] = {NORTH, EAST, SOUTH, WEST}; //Array to iterate through the moves without naming them everytime
+  //We store the coordinates changes in these arrays, they represent the how the position changes when moving in each direction,
+  //Example: moving NORTH, means the difference between x before and after the move is dx[0] and same for y, dy[0], same goes for EAST with index 1 and so on...
+  int dx[4] = {0, 1, 0, -1};
+  int dy[4] = {-1, 0, 1, 0};
+
+  //Here we will store the target position, it will be either tail or bonus
+  Position target;
+
+  //Here we will check for the best target between the bonus and the tail, to stay safe and be greedy (a bit :D)
+  if (bonus_found){
+    //We found the bonus
+    //Calculate the distances
+    int distHeadToBonus = abs(headPos.x - bonusPos.x) + abs(headPos.y - bonusPos.y);//Head to bonus distance
+    int distHeadToTail = abs(headPos.x - tailPos.x) + abs(headPos.y - tailPos.y); // Head to tail distance
+    int distBonusToTail = abs(bonusPos.x - tailPos.x) + abs(bonusPos.y - tailPos.y);// Bonus to tail distance
+
+    //If the bonus is in the path to the tail (or close (3 cells more as max)), go to the bonus directly
+    //Otherwise go to tail to stay safe and not get trapped
+    if (distHeadToBonus + distBonusToTail <= distHeadToTail + 3){
+      target = bonusPos; //The bonus is on our path or very close so we go for it
+    } else {
+      target = tailPos; //Otherwise chase the tail to stay safe
+    }
+
+  } else {
+    target = tailPos; //No bonus, chase tail (this case is not possible but we implement it to stay safe in case of errors or bugs)
+  }
+
+  //Here wee find the best move to reach the target we set, based on a score we will calculate for each move
+  action best_move = rand()%4; //We initialize the best move to choose with a random move
+  int best_score = -999999; //We calculate the scores of the best 
+
+  for (int i = 0; i < 4; i++){//We go through all the moves possible in the array moves[4]
+    //Calculate the new head coordinates after the move
+    int newX = headPos.x + dx[i];
+    int newY = headPos.y + dy[i];
+
+    //Check if this move is valid
+    if (!actionValid(moves[i], map, headPos.x, headPos.y)){
+      continue; //If action not valid we skip this move
+    }
+
+    int score = 0; //Store the score of the current move based on:
+                  // distance to the target (close is better)
+                  // space around this position (free cells) (the more the better)
+                  // distance to the center to avoid edges (the closer the better)
+
+    // First: distance to target
+    int distToTarget = abs(newX - target.x) + abs(newY - target.y);
+    score -= distToTarget * 100; // 100 coefficent to prioritize getting closer to the target
+
+    // Second: Space around the position
+    int freeNeighbors = countValidMoves(map, newX, newY);
+    score += freeNeighbors * 10;
+
+    // Third Avoid edges and corners
+    int distToCenter = abs(newX - mapxsize/2) + abs(newY - mapysize/2);
+    score -= distToCenter;
+    
+    if (score > best_score){ //If the current score is better, take this move and update the best_score
+      best_score = score;
+      best_move = moves[i];
+    }
+  }
+
+  return best_move;
 }
