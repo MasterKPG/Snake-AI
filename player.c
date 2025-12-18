@@ -754,24 +754,26 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
     }
 
   }
-  
-   if (shouldMoveRight){// We should move right
-    
-    if (atRightEdge){// We're close to the right edge, we should move down
-      preferred_move = SOUTH; //Zigzag path
-      secondary_move = EAST; // Continue right if not possible
-    } else { //We're far from the the right edge, we should continue moving right to make the zigzag pattern
-      preferred_move = EAST; //Zigzag path
-      secondary_move = SOUTH; // Go down if not possible
-    }
+  // Default zigzag pattern (only if no special case handled above)
+  else {
+    if (shouldMoveRight){// We should move right
+      
+      if (atRightEdge){// We're close to the right edge, we should move down
+        preferred_move = SOUTH; //Zigzag path
+        secondary_move = EAST; // Continue right if not possible
+      } else { //We're far from the the right edge, we should continue moving right to make the zigzag pattern
+        preferred_move = EAST; //Zigzag path
+        secondary_move = SOUTH; // Go down if not possible
+      }
 
-  } else {// We should move left and follow same logic
-    if (atLeftEdge){ //Move down
-      preferred_move = SOUTH;
-      secondary_move = WEST;
-    } else { //Move left
-      preferred_move = WEST;
-      secondary_move = SOUTH;
+    } else {// We should move left and follow same logic
+      if (atLeftEdge){ //Move down
+        preferred_move = SOUTH;
+        secondary_move = WEST;
+      } else { //Move left
+        preferred_move = WEST;
+        secondary_move = SOUTH;
+      }
     }
   }
 
