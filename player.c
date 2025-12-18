@@ -208,7 +208,7 @@ static action followTailStrategy(char **map, int mapxsize, int mapysize, Positio
   //Longer snake need to have minimal tolerance, can easily get trapped
   //Shorter snake we can go for the bonus without checking because the risk is minimal
   int mapSize = (mapxsize + mapysize)/2; //Calculate the average dimension of the map
-  int tolerance = mapSize/2 - snakeLength/3; //To optimize the division constants later with tests (zid bash code test_sequence bach tshl 3lina test)
+  int tolerance = mapSize/2 - snakeLength/3; //To optimize the division constants later with tests
 
   //Ensure minimum tolerance of 5
   if (tolerance < 5) tolerance = 5;
@@ -447,6 +447,7 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   (The same as the code snippet in the followTailStrategy and zigzagStrategy)
 */
 static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Position headPos, Position bonusPos){
+  //Same coding logic to go through possible moves
   action moves[4] = {NORTH, EAST, SOUTH, WEST};
   int dx[4] = {0, 1, 0, -1};
   int dy[4] = {-1, 0, 1, 0};
@@ -464,7 +465,7 @@ static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Positio
 
     int score = 0;
 
-    //More aggressive towards bonus (coefficient 200 (checki f test!!!!!!!!))
+    //More aggressive towards bonus (coefficient 200)
     int distToBonus = abs(newX - bonusPos.x) + abs(newY - bonusPos.y);
     score -= distToBonus * 200;
 
@@ -508,7 +509,7 @@ static action smartStrategy(char **map, int mapxsize, int mapysize, Position hea
     return aggressiveStrategy(map, mapysize, mapxsize, headPos, bonusPos);
   }
 
-  //Snake's head is close to the bonus (under 5 cells) => aggressive (khasni noptimizi b test sequence !!!!!)
+  //Snake's head is close to the bonus (under 5 cells) => aggressive
   if (distHeadToBonus <= 5){
     return aggressiveStrategy(map, mapysize, mapxsize, headPos, bonusPos);
   }
@@ -526,6 +527,6 @@ static action smartStrategy(char **map, int mapxsize, int mapysize, Position hea
   }
 
   //None of the cases above fit for the current situation => default, follow tail strategy
-  followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+  followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s); //to get no warnings saying followTailStrategy not used
   return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, last_action);
 }
