@@ -57,6 +57,7 @@ static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
 static action zigzagStrategy(char **, int, int, Position, Position, Position);
 static action aggressiveStrategy(char **, int, int, Position, Position);
+static action smartStrategy(char **, int, int, Position, Position, Position, snake_list)
 
 
 /*
@@ -790,4 +791,52 @@ static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Positio
   }
 
   return best_move;
+}
+
+/*
+  smartStrategy function:
+  This function chooses which strategy to go with, between follow tail, zigzag and aggressive based on the situation
+  We choose the aggressive strategy if:
+    -The snake is too small (length under 5)
+    -The snake's head is very close to the bonus (5 cells)
+  We choose the zigzag strategy if:
+    -The snake is very large (fills up 60% of the map at least)
+    -The bonus is very far away in comparison to the tail (over 1,5 x distance to the tail)
+  We choose the follow tail strategy if:
+    None of the cases before apply to the snake, so we use the default strategy
+    and either go for the bonus or the tail to not get trapped
+*/
+static action smartStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, snake_list s){
+  int snakeLength = getSnakeLength(s);
+  int mapSize = (mapxsize + mapysize) / 2;
+
+  //Calculate distances
+  int distHeadToBonus = abs(headPos.x - bonusPos.x) + abs(headPos.y - bonusPos.y);
+  int distHeadToTail = abs(headPos.x - tailPos.x) + abs(headPos.y - tailPos.y);
+
+  //Snake is small (length <= 5) => aggressive
+  if (snakeLength <= 5){
+    return aggressiveStrategy(map, mapysize, mapxsize, headPos, bonusPos);
+  }
+
+  //Snake's head is close to the bonus (under 5 cells) => aggressive (khasni noptimizi b test sequence !!!!!)
+  if (distHeadToBonus <= 5){
+    return aggressiveStrategy(map, mapysize, mapxsize, headPos, bonusPos);
+  }
+
+  //Snake is big (fills up 60% of the map at least) => zigzag (can be brought down to minimize snake chasing tail)
+  int totalCells = (mapxsize - 2) * (mapysize - 2); //No walls
+  if (snakeLength > totalCells * 0.6){
+    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
+  }
+
+  //Snake's head is too far away from the bonus (> 1,5x distance to tail) => zigzag
+  //This prevents the snake from chasing his tail in circles when the bonus is far
+  if (distHeadToBonus > distHeadToTail * 1.5 && snakeLength > 15){
+    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
+  }
+
+  //None of the cases above fit for the current situation => default, follow tail strategy
+  return followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+
 }
