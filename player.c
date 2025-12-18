@@ -681,11 +681,15 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   //With this we can sweep the map and get the bonus in case it's too far away without getting trapped
 
   //Check if we're at the right edge (near the right wall)
-  bool atRightEdge = (headPos.x >= mapxsize - 3); // Leave path for the snake to comeback -1 for the wall, -1 for the free path and -1 where the snake should be
-  //Check if we're at the left edge (near the right wall)
-  bool atLeftEdge = (headPos.x <= 2); //same logic because the map starts at 0
-  bool atBottomEdge = (headPos.y >= mapysize - 3); //Same logic
-  bool atTopEdge = (headPos.y <= 2); //Same logic
+  // mapxsize-1 is the wall, mapxsize-2 is the last playable cell
+  bool atRightEdge = (headPos.x >= mapxsize - 2);
+  //Check if we're at the left edge
+  // 0 is the wall, 1 is the first playable cell
+  bool atLeftEdge = (headPos.x <= 1);
+  // mapysize-1 is the wall, mapysize-2 is the last playable cell
+  bool atBottomEdge = (headPos.y >= mapysize - 2);
+  // 0 is the wall, 1 is the first playable cell
+  bool atTopEdge = (headPos.y <= 1);
 
   //Determine if we should be moving right or left depending on the y coordinates (lines)
   //we choose:
