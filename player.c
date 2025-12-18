@@ -55,6 +55,7 @@ static Position getTailPos(snake_list);
 static action followTailStrategy(char **, int, int, Position, Position, Position, snake_list);
 static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
+static action zigzagStrategy(char **, int, int, Position, Position, Position);
 
 
 /*
@@ -657,4 +658,93 @@ static int getSnakeLength(snake_list s){
     current = current->next;
   }
   return length;
+}
+
+/*
+  zigzagStrategy function:
+  This function returns the action needed to go in a zigzag pattern while leaving a path on the bottom of the map
+  so the snake doesn't get trapped.
+*/
+static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos){
+  
+  action moves[4] = {NORTH, EAST, SOUTH, WEST}; //Array to iterate through the moves without naming them everytime
+  //We store the coordinates changes in these arrays, they represent the how the position changes when moving in each direction,
+  //Example: moving NORTH, means the difference between x before and after the move is dx[0] and same for y, dy[0], same goes for EAST with index 1 and so on...
+  int dx[4] = {0, 1, 0, -1};
+  int dy[4] = {-1, 0, 1, 0};
+
+  //zigzag pattern: move right, go down at the edge of the map, move left, go down, repeat
+  //With this we can sweep the map and get the bonus in case it's too far away without getting trapped
+
+  //Check if we're at the right edge (near the right wall)
+  bool atRightEdge = (headPos.x >= mapxsize - 3); // Leave path for the snake to comeback -1 for the wall, -1 for the free path and -1 where the snake should be
+  //Check if we're at the left edge (near the right wall)
+  bool atLeftEdge = (headPos.x <= 2); //same logic because the map starts at 0
+
+  //Determine if we should be moving right or left depending on the y coordinates (lines)
+  //we choose:
+  //Even lines (from top): move right
+  //Odd lines: move left
+  bool shouldMoveRight = ((headPos.y - 1)%4 < 2 );
+
+  action preferred_move; //The move that will get us in zigzag path
+  action secondary_move; //Move to use incase the zigzag is not possible
+
+  if (shouldMoveRight){// We should move right
+    
+    if (atRightEdge){// We're close to the right edge, we should move down
+      preferred_move = SOUTH; //Zigzag path
+      secondary_move = EAST; // Continue right if not possible
+    } else { //We're far from the the right edge, we should continue moving right to make the zigzag pattern
+      preferred_move = EAST; //Zigzag path
+      secondary_move = SOUTH; // Go down if not possible
+    }
+
+  } else {// We should move left and follow same logic
+    if (atLeftEdge){ //Move down
+      preferred_move = SOUTH;
+      secondary_move = WEST;
+    } else { //Move left
+      preferred_move = WEST;
+      secondary_move = SOUTH;
+    }
+  }
+
+  //Try the preferred move first 
+  if (actionValid(preferred_move, map, headPos.x, headPos.y)){
+    return preferred_move;
+  }
+  //Else try secondary move
+  if (actionValid(secondary_move, map, headPos.x, headPos.y)){
+    return secondary_move;
+  }
+
+  //In case both not valid, try any valid move with priority to moving towards bonus
+  action best_move = rand()%4;
+  int best_score = -999999;
+
+  for (int i = 0; i < 4; i++){
+    if (actionValid(moves[i], map, headPos.x, headPos.y)){
+      int newX = headPos.x + dx[i];
+      int newY = headPos.y + dy[i];
+
+      int score = 0;
+
+      //Distance to bonus 
+      int distToBonus = abs(newX - bonusPos.x) + abs(newY - bonusPos.y);
+      score -= distToBonus * 10;
+
+      //Free space
+      int freeNeighbors = countValidMoves(map, newX, newY);
+      score += freeNeighbors * 50;
+
+      if (score > best_score){
+        best_score = score;
+        best_move = moves[i];
+      }
+
+    }
+  }
+
+  return best_move;
 }
