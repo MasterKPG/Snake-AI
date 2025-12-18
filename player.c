@@ -56,6 +56,7 @@ static action followTailStrategy(char **, int, int, Position, Position, Position
 static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
 static action zigzagStrategy(char **, int, int, Position, Position, Position);
+static action aggressiveStrategy(char **, int, int, Position, Position);
 
 
 /*
@@ -744,6 +745,48 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
       }
 
     }
+  }
+
+  return best_move;
+}
+
+/*
+  aggressiveStrategy function:
+  This function returns the action to move towards the bonus, in an aggressive way,
+  meaning it doesn't take into account getting trapped, only checks if the move is valid.
+  (The same as the code snippet in the followTailStrategy and zigzagStrategy)
+*/
+static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Position headPos, Position bonusPos){
+  action moves[4] = {NORTH, EAST, SOUTH, WEST};
+  int dx[4] = {0, 1, 0, -1};
+  int dy[4] = {-1, 0, 1, 0};
+
+  action best_move = rand()%4;
+  int best_score = -999999; 
+
+  for (int i = 0; i < 4; i++){
+    if (!actionValid(moves[i], map, headPos.x, headPos.y)){
+      continue;
+    }
+
+    int newX = headPos.x + dx[i];
+    int newY = headPos.y + dy[i];
+
+    int score = 0;
+
+    //More aggressive towards bonus (coefficient 200 (checki f test!!!!!!!!))
+    int distToBonus = abs(newX - bonusPos.x) + abs(newY - bonusPos.y);
+    score -= distToBonus * 200;
+
+    //Add a bit of safety to not make it too risky by taking moves with better escape possibilities
+    int freeNeighbors = countValidMoves(map, newX, newY);
+    score += freeNeighbors * 30;
+
+    if (score > best_score){
+      best_score = score; 
+      best_move = moves[i];
+    }
+
   }
 
   return best_move;
