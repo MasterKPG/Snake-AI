@@ -55,9 +55,9 @@ static Position getTailPos(snake_list);
 static action followTailStrategy(char **, int, int, Position, Position, Position, snake_list);
 static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
-static action zigzagStrategy(char **, int, int, Position, Position, Position);
+static action zigzagStrategy(char **, int, int, Position, Position, Position, action);
 static action aggressiveStrategy(char **, int, int, Position, Position);
-static action smartStrategy(char **, int, int, Position, Position, Position, snake_list);
+static action smartStrategy(char **, int, int, Position, Position, Position, snake_list, action);
 
 
 /*
@@ -106,7 +106,7 @@ action snake(
   }
   //-----------------------------------------------------------------------------------------------------------
 
-  a = smartStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+  a = smartStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s, last_action);
 
   if (DEBUG) {
     int snakeLength = getSnakeLength(s);
@@ -669,7 +669,7 @@ static int getSnakeLength(snake_list s){
   This function returns the action needed to go in a zigzag pattern while leaving a path on the bottom of the map
   so the snake doesn't get trapped.
 */
-static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos){
+static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, action last_action){
   
   action moves[4] = {NORTH, EAST, SOUTH, WEST}; //Array to iterate through the moves without naming them everytime
   //We store the coordinates changes in these arrays, they represent the how the position changes when moving in each direction,
@@ -684,21 +684,36 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   bool atRightEdge = (headPos.x >= mapxsize - 3); // Leave path for the snake to comeback -1 for the wall, -1 for the free path and -1 where the snake should be
   //Check if we're at the left edge (near the right wall)
   bool atLeftEdge = (headPos.x <= 2); //same logic because the map starts at 0
-  bool atBottomEdge = (headPos.y >= mapysize - 3);
-  bool atTopEdge = (headPos.y <= 2);
+  bool atBottomEdge = (headPos.y >= mapysize - 3); //Same logic
+  bool atTopEdge = (headPos.y <= 2); //Same logic
 
   //Determine if we should be moving right or left depending on the y coordinates (lines)
   //we choose:
   //Even lines (from top): move right
   //Odd lines: move left
-  bool shouldMoveRight = ((headPos.y - 1) % 2 == 0); //-1 to start by going right instead of left
+  bool shouldMoveRight = ((headPos.y) % 2 == 0);
 
   action preferred_move; //The move that will get us in zigzag path
   action secondary_move; //Move to use incase the zigzag is not possible
 
-  //Special case
+  //Special case 1
+  //On the way to the top (the last action was NORTH)
+  if (last_action == NORTH && !atTopEdge){
+    //Keep going up
+    preferred_move = NORTH;
+    //if blocked try to move to the side
+    if (atRightEdge){
+      secondary_move = WEST; // move left 
+    } else if (atLeftEdge){
+      secondary_move = EAST; // move right
+    } else {
+      secondary_move = WEST; //Go left when blocked
+    }
+  }
+
+  //Special case 2
   //At bottom edge, we should move up again
-  if (atBottomEdge){
+  else if (atBottomEdge){
     if (atRightEdge){
       //We're in the right bottom corner, we should go up 
       preferred_move = NORTH;
@@ -718,7 +733,7 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
       }
     }
   }
-  //Special case
+  //Special case 3
   //At top edge (after going back up) we should restart the zigzaging and going down again
   else if (atTopEdge){
     if (atLeftEdge){
@@ -769,7 +784,7 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
     return secondary_move;
   }
 
-  //In case both not valid, try any valid move with priority to moving towards bonus
+  //In case both not valid, try any valid move with priority to moving away from bottom/top edges and towards bonus
   action best_move = rand()%4;
   int best_score = -999999;
 
@@ -854,7 +869,7 @@ static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Positio
     None of the cases before apply to the snake, so we use the default strategy
     and either go for the bonus or the tail to not get trapped
 */
-static action smartStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, snake_list s){
+static action smartStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, snake_list s, action last_action){
   int snakeLength = getSnakeLength(s);
   // int mapSize = (mapxsize + mapysize) / 2; (will be used to optimize the hardcoded 5)
 
@@ -863,7 +878,7 @@ static action smartStrategy(char **map, int mapxsize, int mapysize, Position hea
   int distHeadToTail = abs(headPos.x - tailPos.x) + abs(headPos.y - tailPos.y);
 
   //Snake is small (length <= 5) => aggressive
-  if (snakeLength <= 5){
+  if (snakeLength <= 15){
     return aggressiveStrategy(map, mapysize, mapxsize, headPos, bonusPos);
   }
 
@@ -875,17 +890,16 @@ static action smartStrategy(char **map, int mapxsize, int mapysize, Position hea
   //Snake is big (fills up 60% of the map at least) => zigzag (can be brought down to minimize snake chasing tail)
   int totalCells = (mapxsize - 2) * (mapysize - 2); //No walls
   if (snakeLength > totalCells * 0.6){
-    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
+    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, last_action);
   }
 
   //Snake's head is too far away from the bonus (> 1,5x distance to tail) => zigzag
   //This prevents the snake from chasing his tail in circles when the bonus is far
   if (distHeadToBonus > distHeadToTail * 1.5 && snakeLength > 15){
-    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
+    return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, last_action);
   }
 
   //None of the cases above fit for the current situation => default, follow tail strategy
   followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
-  return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
-
+  return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, last_action);
 }
