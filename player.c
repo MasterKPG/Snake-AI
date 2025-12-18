@@ -106,10 +106,12 @@ action snake(
   }
   //-----------------------------------------------------------------------------------------------------------
 
-  a = followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+  a = smartStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
 
-  if (DEBUG){
-    printf("Follow tail strategy, moving: ");
+  if (DEBUG) {
+    int snakeLength = getSnakeLength(s);
+    int distToBonus = abs(headPos.x - bonusPos.x) + abs(headPos.y - bonusPos.y);
+    printf("Snake length: %d, Distance to bonus: %d - Moving: ", snakeLength, distToBonus);
     printAction(a);
     printf("\n");
   }
