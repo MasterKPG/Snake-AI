@@ -57,7 +57,7 @@ static int countValidMoves(char **, int, int);
 static int getSnakeLength(snake_list);
 static action zigzagStrategy(char **, int, int, Position, Position, Position);
 static action aggressiveStrategy(char **, int, int, Position, Position);
-static action smartStrategy(char **, int, int, Position, Position, Position, snake_list)
+static action smartStrategy(char **, int, int, Position, Position, Position, snake_list);
 
 
 /*
@@ -689,7 +689,7 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   //we choose:
   //Even lines (from top): move right
   //Odd lines: move left
-  bool shouldMoveRight = ((headPos.y - 1)%4 < 2 );
+  bool shouldMoveRight = ((headPos.y - 1) % 2 == 0); //-1 to start by going right instead of left
 
   action preferred_move; //The move that will get us in zigzag path
   action secondary_move; //Move to use incase the zigzag is not possible
@@ -810,7 +810,7 @@ static action aggressiveStrategy(char **map, int mapysize, int mapxsize, Positio
 */
 static action smartStrategy(char **map, int mapxsize, int mapysize, Position headPos, Position tailPos, Position bonusPos, snake_list s){
   int snakeLength = getSnakeLength(s);
-  int mapSize = (mapxsize + mapysize) / 2;
+  // int mapSize = (mapxsize + mapysize) / 2; (will be used to optimize the hardcoded 5)
 
   //Calculate distances
   int distHeadToBonus = abs(headPos.x - bonusPos.x) + abs(headPos.y - bonusPos.y);
