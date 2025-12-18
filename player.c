@@ -684,6 +684,8 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   bool atRightEdge = (headPos.x >= mapxsize - 3); // Leave path for the snake to comeback -1 for the wall, -1 for the free path and -1 where the snake should be
   //Check if we're at the left edge (near the right wall)
   bool atLeftEdge = (headPos.x <= 2); //same logic because the map starts at 0
+  bool atBottomEdge = (headPos.y >= mapysize - 3);
+  bool atTopEdge = (headPos.y <= 2);
 
   //Determine if we should be moving right or left depending on the y coordinates (lines)
   //we choose:
@@ -694,7 +696,51 @@ static action zigzagStrategy(char **map, int mapxsize, int mapysize, Position he
   action preferred_move; //The move that will get us in zigzag path
   action secondary_move; //Move to use incase the zigzag is not possible
 
-  if (shouldMoveRight){// We should move right
+  //Special case
+  //At bottom edge, we should move up again
+  if (atBottomEdge){
+    if (atRightEdge){
+      //We're in the right bottom corner, we should go up 
+      preferred_move = NORTH;
+      secondary_move = WEST;
+    } else if (atLeftEdge) {
+      //We're in the left bottom corner, we should go up
+      preferred_move = NORTH;
+      secondary_move = EAST;
+    } else {
+      //Bottom edge, but not in a corner, should continue moving horizontally until we hit a corner
+      if (shouldMoveRight){
+        preferred_move = EAST;
+        secondary_move = NORTH;
+      } else {
+        preferred_move = WEST; 
+        secondary_move = NORTH;
+      }
+    }
+  }
+  //Special case
+  //At top edge (after going back up) we should restart the zigzaging and going down again
+  else if (atTopEdge){
+    if (atLeftEdge){
+      preferred_move = SOUTH;
+      secondary_move = EAST;
+    } else if (atRightEdge){
+      preferred_move = SOUTH;
+      secondary_move = WEST;
+    } else {
+      //continue horizontal at the top until we're in a corner
+      if (shouldMoveRight){
+        preferred_move = EAST;
+        secondary_move = SOUTH;
+      } else {
+        preferred_move = WEST;
+        secondary_move = SOUTH;
+      }
+    }
+
+  }
+  
+   if (shouldMoveRight){// We should move right
     
     if (atRightEdge){// We're close to the right edge, we should move down
       preferred_move = SOUTH; //Zigzag path
@@ -839,6 +885,7 @@ static action smartStrategy(char **map, int mapxsize, int mapysize, Position hea
   }
 
   //None of the cases above fit for the current situation => default, follow tail strategy
-  return followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+  followTailStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos, s);
+  return zigzagStrategy(map, mapxsize, mapysize, headPos, tailPos, bonusPos);
 
 }
